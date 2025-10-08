@@ -103,6 +103,22 @@ const DadAndSonGame = ({
   const getBlocksHeight = stack => sum(stack) * BLOCK_SCALE;
   const getPadding = stack => Math.max(0, getStackHeight(stack) - getBlocksHeight(stack));
 
+  // Find the tallest stack (in px) among all columns for both father and son
+  const getMaxStackHeight = () => {
+    // Only consider non-empty columns for max height
+    const allStacks = [...fatherStacks, ...sonStacks];
+    let max = INIT_STACK_HEIGHT;
+    for (let stack of allStacks) {
+      const h = getBlocksHeight(stack);
+      if (h > max) max = h;
+    }
+    // Clamp to STACK_HEIGHT
+    return Math.min(max, STACK_HEIGHT);
+  };
+
+  // This is the max height of blocks (not including padding)
+  const maxBlocksHeight = getMaxStackHeight();
+
   // Scroll to bottom on update
   useLayoutEffect(() => {
     fatherStacks.forEach((stack, i) => {
@@ -155,41 +171,55 @@ const DadAndSonGame = ({
   };
 
   // Render a stack column
-  const renderStackColumn = (stack, idx, color, scrollRefs, label) => (
-    <div key={idx} className="flex flex-col items-center">
-      <div
-        ref={el => (scrollRefs.current[idx] = el)}
-        className="flex flex-col-reverse items-center overflow-y-auto border border-gray-400 rounded mt-2 w-20"
-        style={{
-          maxHeight: `${getStackHeight(stack)}px`,
-          minHeight: `${getStackHeight(stack)}px`,
-          background: "#1b2330",
-          paddingTop: `${getPadding(stack)}px`,
-          paddingBottom: 0,
-          paddingLeft: "0.25rem",
-          paddingRight: "0.25rem",
-          transition: "max-height 0.3s, min-height 0.3s, padding-top 0.3s",
-          marginLeft: idx === 0 ? 0 : "1.5rem",
-        }}
-      >
-        {stack.map((size, i) => (
-          <div
-            key={i}
-            className={`w-full ${color} rounded mb-1 flex justify-center items-center text-white font-bold`}
-            style={{ height: `${size * BLOCK_SCALE}px` }}
-          >
-            {size}
-          </div>
-        ))}
+  // The key change: use maxBlocksHeight for the stack container height and padding
+  const renderStackColumn = (stack, idx, color, scrollRefs, label) => {
+    // The visible height for all stacks is the same (maxBlocksHeight or INIT_STACK_HEIGHT)
+    const visibleHeight = maxBlocksHeight > 0 ? maxBlocksHeight : INIT_STACK_HEIGHT;
+    const blocksHeight = getBlocksHeight(stack);
+    // Padding to push blocks to the bottom so all stacks align at the base
+    const paddingTop = Math.max(0, visibleHeight - blocksHeight);
+
+    return (
+      <div key={idx} className="flex flex-col items-center">
+        <div
+          ref={el => (scrollRefs.current[idx] = el)}
+          className="flex flex-col-reverse items-center overflow-y-auto border border-gray-400 rounded mt-2 w-20"
+          style={{
+            maxHeight: `${visibleHeight}px`,
+            minHeight: `${visibleHeight}px`,
+            background: "#1b2330",
+            paddingTop: `${paddingTop}px`,
+            paddingBottom: 0,
+            paddingLeft: "0.25rem",
+            paddingRight: "0.25rem",
+            transition: "max-height 0.3s, min-height 0.3s, padding-top 0.3s",
+            marginLeft: idx === 0 ? 0 : "1.5rem",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column-reverse",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          {stack.map((size, i) => (
+            <div
+              key={i}
+              className={`w-full ${color} rounded mb-1 flex justify-center items-center text-white font-bold`}
+              style={{ height: `${size * BLOCK_SCALE}px` }}
+            >
+              {size}
+            </div>
+          ))}
+        </div>
+        {label && idx === 0 && (
+          <>
+            <div className="text-white mt-2 font-bold">{label}</div>
+            <div className="text-gray-300 text-sm mt-1">Total: {label === "Father" ? fatherTotal : sonTotal}</div>
+          </>
+        )}
       </div>
-      {label && idx === 0 && (
-        <>
-          <div className="text-white mt-2 font-bold">{label}</div>
-          <div className="text-gray-300 text-sm mt-1">Total: {label === "Father" ? fatherTotal : sonTotal}</div>
-        </>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex gap-32 items-end mb-6 w-full justify-center">
@@ -202,7 +232,7 @@ const DadAndSonGame = ({
           <rect x="36" y="85" width="8" height="30" fill="#2f4964" />
           <rect x="56" y="85" width="8" height="30" fill="#2f4964" />
         </svg>
-        <div className="flex flex-row">
+        <div className="flex flex-row items-end">
           {fatherStacks.map((stack, idx) =>
             renderStackColumn(stack, idx, "bg-blue-500", fatherScrollRefs, idx === 0 ? "Father" : null)
           )}
@@ -224,7 +254,7 @@ const DadAndSonGame = ({
           <rect x="40" y="70" width="6" height="25" fill="#354f7a" />
           <rect x="54" y="70" width="6" height="25" fill="#354f7a" />
         </svg>
-        <div className="flex flex-row">
+        <div className="flex flex-row items-end">
           {sonStacks.map((stack, idx) =>
             renderStackColumn(stack, idx, "bg-green-500", sonScrollRefs, idx === 0 ? "Son" : null)
           )}

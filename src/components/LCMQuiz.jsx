@@ -33,6 +33,7 @@ const LCMQuiz = ({ onNewQuestion }) => {
     newUserAnswers[currentQ] = userAnswer;
     setUserAnswers(newUserAnswers);
 
+    // Only allow submit if not already answered
     if (!answered[currentQ]) {
       if (Number(userAnswer) === correct) {
         setScore(score + 1);
@@ -42,6 +43,16 @@ const LCMQuiz = ({ onNewQuestion }) => {
       }
       newAnswered[currentQ] = true;
       setAnswered(newAnswered);
+
+      setTimeout(() => {
+        setFeedback("");
+        // Only auto-advance if not last question and not already finished
+        if (currentQ + 1 < questions.length) {
+          setCurrentQ(currentQ + 1);
+        } else if (newAnswered.every(Boolean)) {
+          setQuizFinished(true);
+        }
+      }, 1500);
     } else {
       // Already answered, just show feedback again
       if (Number(userAnswer) === correct) {
@@ -50,16 +61,6 @@ const LCMQuiz = ({ onNewQuestion }) => {
         setFeedback(`❌ Wrong! Correct answer: ${correct}`);
       }
     }
-
-    setTimeout(() => {
-      setFeedback("");
-      // Only auto-advance if not last question and not already finished
-      if (currentQ + 1 < questions.length) {
-        setCurrentQ(currentQ + 1);
-      } else if (newAnswered.every(Boolean)) {
-        setQuizFinished(true);
-      }
-    }, 1500);
   };
 
   const resetQuiz = () => {
@@ -74,10 +75,15 @@ const LCMQuiz = ({ onNewQuestion }) => {
     setUserAnswers(Array(5).fill(""));
   };
 
+  // When going to previous question, allow re-entering answer
   const handlePrev = () => {
     if (currentQ > 0) {
       setCurrentQ(currentQ - 1);
       setFeedback("");
+      // Allow re-answering previous question
+      let newAnswered = [...answered];
+      newAnswered[currentQ - 1] = false;
+      setAnswered(newAnswered);
     }
   };
 
