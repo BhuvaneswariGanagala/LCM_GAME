@@ -107,7 +107,7 @@ const LCMQuiz = ({ onNewQuestion }) => {
             type="number"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
-            className="w-24 text-center px-2 py-1 rounded text-black"
+            className="w-36 text-center px-2 py-1 rounded text-white"
             placeholder="Your answer"
             disabled={answered[currentQ]}
           />
