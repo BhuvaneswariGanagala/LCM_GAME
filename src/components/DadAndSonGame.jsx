@@ -1,7 +1,6 @@
 import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
 
 const BLOCK_SCALE = 10; // smaller scale to fit larger LCMs
-const STACK_HEIGHT = 300; // px, must match max-h-[300px]
 const INIT_STACK_HEIGHT = 60; // Initial small height for empty stack
 
 // Helper to sum an array
@@ -17,63 +16,21 @@ const DadAndSonGame = ({
   currentQ, // <-- expects currentQ from parent (LCMQuiz)
   submitSignal, // <-- expects a prop that changes when submit is pressed
 }) => {
-  // Each stack is now an array of arrays (columns)
-  const [fatherStacks, setFatherStacks] = useState([[]]);
-  const [sonStacks, setSonStacks] = useState([[]]);
+  // Each stack is now a single array (no columns)
+  const [fatherStackState, setFatherStackState] = useState([]);
+  const [sonStackState, setSonStackState] = useState([]);
 
   // When props change (refresh), sync with parent if non-empty, else empty
   useEffect(() => {
-    if (fatherStack.length) {
-      // Split the flat stack into columns of max height STACK_HEIGHT
-      let columns = [];
-      let current = [];
-      let currentHeight = 0;
-      for (let i = 0; i < fatherStack.length; i++) {
-        const block = fatherStack[i];
-        const blockHeight = block * BLOCK_SCALE;
-        if (currentHeight + blockHeight > STACK_HEIGHT) {
-          columns.push(current);
-          current = [block];
-          currentHeight = blockHeight;
-        } else {
-          current.push(block);
-          currentHeight += blockHeight;
-        }
-      }
-      if (current.length > 0) columns.push(current);
-      setFatherStacks(columns.length ? columns : [[]]);
-    } else {
-      setFatherStacks([[]]);
-    }
-    if (sonStack.length) {
-      let columns = [];
-      let current = [];
-      let currentHeight = 0;
-      for (let i = 0; i < sonStack.length; i++) {
-        const block = sonStack[i];
-        const blockHeight = block * BLOCK_SCALE;
-        if (currentHeight + blockHeight > STACK_HEIGHT) {
-          columns.push(current);
-          current = [block];
-          currentHeight = blockHeight;
-        } else {
-          current.push(block);
-          currentHeight += blockHeight;
-        }
-      }
-      if (current.length > 0) columns.push(current);
-      setSonStacks(columns.length ? columns : [[]]);
-    } else {
-      setSonStacks([[]]);
-    }
+    setFatherStackState(fatherStack.length ? [...fatherStack] : []);
+    setSonStackState(sonStack.length ? [...sonStack] : []);
     // eslint-disable-next-line
   }, [fatherStack, sonStack]);
 
   // Reset stacks when question changes (move to next question)
   useEffect(() => {
-    // After moving to next question, empty the stack (like on refresh)
-    setFatherStacks([[]]);
-    setSonStacks([[]]);
+    setFatherStackState([]);
+    setSonStackState([]);
     setFatherStack([]);
     setSonStack([]);
     // eslint-disable-next-line
@@ -81,39 +38,31 @@ const DadAndSonGame = ({
 
   // Clear stacks after submitSignal changes (i.e., after submit)
   useEffect(() => {
-    setFatherStacks([[]]);
-    setSonStacks([[]]);
+    setFatherStackState([]);
+    setSonStackState([]);
     setFatherStack([]);
     setSonStack([]);
     // eslint-disable-next-line
   }, [submitSignal]);
 
-  // Refs for each stack column
-  const fatherScrollRefs = useRef([]);
-  const sonScrollRefs = useRef([]);
+  // Refs for scrolling
+  const fatherScrollRef = useRef(null);
+  const sonScrollRef = useRef(null);
 
   // Totals
-  const fatherTotals = fatherStacks.map(stack => sum(stack));
-  const sonTotals = sonStacks.map(stack => sum(stack));
-  const fatherTotal = sum(fatherTotals);
-  const sonTotal = sum(sonTotals);
+  const fatherTotal = sum(fatherStackState);
+  const sonTotal = sum(sonStackState);
 
-  // Stack heights and paddings per column
-  const getStackHeight = stack => (stack.length === 0 ? INIT_STACK_HEIGHT : STACK_HEIGHT);
+  // Stack heights and paddings
   const getBlocksHeight = stack => sum(stack) * BLOCK_SCALE;
+  const getStackHeight = stack => (stack.length === 0 ? INIT_STACK_HEIGHT : getBlocksHeight(stack));
   const getPadding = stack => Math.max(0, getStackHeight(stack) - getBlocksHeight(stack));
 
-  // Find the tallest stack (in px) among all columns for both father and son
+  // Find the tallest stack (in px) among both father and son
   const getMaxStackHeight = () => {
-    // Only consider non-empty columns for max height
-    const allStacks = [...fatherStacks, ...sonStacks];
-    let max = INIT_STACK_HEIGHT;
-    for (let stack of allStacks) {
-      const h = getBlocksHeight(stack);
-      if (h > max) max = h;
-    }
-    // Clamp to STACK_HEIGHT
-    return Math.min(max, STACK_HEIGHT);
+    const fatherHeight = getBlocksHeight(fatherStackState);
+    const sonHeight = getBlocksHeight(sonStackState);
+    return Math.max(fatherHeight, sonHeight, INIT_STACK_HEIGHT);
   };
 
   // This is the max height of blocks (not including padding)
@@ -121,79 +70,54 @@ const DadAndSonGame = ({
 
   // Scroll to bottom on update
   useLayoutEffect(() => {
-    fatherStacks.forEach((stack, i) => {
-      fatherScrollRefs.current[i]?.scrollTo({
-        top: fatherScrollRefs.current[i].scrollHeight,
+    if (fatherScrollRef.current) {
+      fatherScrollRef.current.scrollTo({
+        top: fatherScrollRef.current.scrollHeight,
         behavior: "smooth",
       });
-    });
-    sonStacks.forEach((stack, i) => {
-      sonScrollRefs.current[i]?.scrollTo({
-        top: sonScrollRefs.current[i].scrollHeight,
+    }
+    if (sonScrollRef.current) {
+      sonScrollRef.current.scrollTo({
+        top: sonScrollRef.current.scrollHeight,
         behavior: "smooth",
       });
-    });
-  }, [fatherStacks, sonStacks]);
+    }
+  }, [fatherStackState, sonStackState]);
 
   // Add block to father
   const addFatherBlock = () => {
-    let stacks = [...fatherStacks];
-    let last = stacks[stacks.length - 1];
-    const newBlockHeight = fatherBlock * BLOCK_SCALE;
-    const lastStackHeight = getBlocksHeight(last);
-
-    if (lastStackHeight + newBlockHeight > STACK_HEIGHT) {
-      // Need new stack beside it
-      stacks.push([fatherBlock]);
-    } else {
-      stacks[stacks.length - 1] = [...last, fatherBlock];
-    }
-    setFatherStacks(stacks);
-    // Flatten all columns to update the parent stack
-    setFatherStack(stacks.flat());
+    const newStack = [...fatherStackState, fatherBlock];
+    setFatherStackState(newStack);
+    setFatherStack(newStack);
   };
 
   // Add block to son
   const addSonBlock = () => {
-    let stacks = [...sonStacks];
-    let last = stacks[stacks.length - 1];
-    const newBlockHeight = sonBlock * BLOCK_SCALE;
-    const lastStackHeight = getBlocksHeight(last);
-
-    if (lastStackHeight + newBlockHeight > STACK_HEIGHT) {
-      // Need new stack beside it
-      stacks.push([sonBlock]);
-    } else {
-      stacks[stacks.length - 1] = [...last, sonBlock];
-    }
-    setSonStacks(stacks);
-    setSonStack(stacks.flat());
+    const newStack = [...sonStackState, sonBlock];
+    setSonStackState(newStack);
+    setSonStack(newStack);
   };
 
-  // Render a stack column
-  // The key change: use maxBlocksHeight for the stack container height and padding
-  const renderStackColumn = (stack, idx, color, scrollRefs, label) => {
-    // The visible height for all stacks is the same (maxBlocksHeight or INIT_STACK_HEIGHT)
-    const visibleHeight = maxBlocksHeight > 0 ? maxBlocksHeight : INIT_STACK_HEIGHT;
+  // Render a stack
+  // The stack should grow taller, not beside, as blocks are added
+  const renderStack = (stack, color, scrollRef, label, total) => {
     const blocksHeight = getBlocksHeight(stack);
-    // Padding to push blocks to the bottom so all stacks align at the base
+    const visibleHeight = blocksHeight > 0 ? blocksHeight : INIT_STACK_HEIGHT;
     const paddingTop = Math.max(0, visibleHeight - blocksHeight);
 
     return (
-      <div key={idx} className="flex flex-col items-center">
+      <div className="flex flex-col items-center">
         <div
-          ref={el => (scrollRefs.current[idx] = el)}
+          ref={scrollRef}
           className="flex flex-col-reverse items-center overflow-y-auto border border-gray-400 rounded mt-2 w-20"
           style={{
-            maxHeight: `${visibleHeight}px`,
-            minHeight: `${visibleHeight}px`,
+            height: `${visibleHeight}px`,
             background: "#1b2330",
             paddingTop: `${paddingTop}px`,
             paddingBottom: 0,
             paddingLeft: "0.25rem",
             paddingRight: "0.25rem",
-            transition: "max-height 0.3s, min-height 0.3s, padding-top 0.3s",
-            marginLeft: idx === 0 ? 0 : "1.5rem",
+            transition: "height 0.3s, padding-top 0.3s",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column-reverse",
@@ -211,10 +135,10 @@ const DadAndSonGame = ({
             </div>
           ))}
         </div>
-        {label && idx === 0 && (
+        {label && (
           <>
             <div className="text-white mt-2 font-bold">{label}</div>
-            <div className="text-gray-300 text-sm mt-1">Total: {label === "Father" ? fatherTotal : sonTotal}</div>
+            <div className="text-gray-300 text-sm mt-1">Total: {total}</div>
           </>
         )}
       </div>
@@ -232,11 +156,8 @@ const DadAndSonGame = ({
           <rect x="36" y="85" width="8" height="30" fill="#2f4964" />
           <rect x="56" y="85" width="8" height="30" fill="#2f4964" />
         </svg>
-        <div className="flex flex-row items-end">
-          {fatherStacks.map((stack, idx) =>
-            renderStackColumn(stack, idx, "bg-blue-500", fatherScrollRefs, idx === 0 ? "Father" : null)
-          )}
-        </div>
+        {/* Only one stack, let it grow taller */}
+        {renderStack(fatherStackState, "bg-blue-500", fatherScrollRef, "Father", fatherTotal)}
         <button
           className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
           onClick={addFatherBlock}
@@ -254,11 +175,8 @@ const DadAndSonGame = ({
           <rect x="40" y="70" width="6" height="25" fill="#354f7a" />
           <rect x="54" y="70" width="6" height="25" fill="#354f7a" />
         </svg>
-        <div className="flex flex-row items-end">
-          {sonStacks.map((stack, idx) =>
-            renderStackColumn(stack, idx, "bg-green-500", sonScrollRefs, idx === 0 ? "Son" : null)
-          )}
-        </div>
+        {/* Only one stack, let it grow taller */}
+        {renderStack(sonStackState, "bg-green-500", sonScrollRef, "Son", sonTotal)}
         <button
           className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
           onClick={addSonBlock}
