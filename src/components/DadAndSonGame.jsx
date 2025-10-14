@@ -149,17 +149,43 @@ const DadAndSonGame = ({
     <div className="flex gap-32 items-end mb-6 w-full justify-center">
       {/* Father Section */}
       <div className="flex flex-col items-center">
-        <svg viewBox="0 0 100 140" width="80">
-          <circle cx="50" cy="30" r="20" fill="#ffd7b3" />
-          <path d="M30,25 Q50,5 70,25 Q60,10 30,25Z" fill="#553c2a" />
-          <rect x="38" y="50" width="24" height="35" rx="6" fill="#5cb2d6" />
-          <rect x="36" y="85" width="8" height="30" fill="#2f4964" />
-          <rect x="56" y="85" width="8" height="30" fill="#2f4964" />
+        <svg viewBox="0 0 110 160" width="90" aria-label="Father avatar">
+          {/* Dad head (slightly smaller to fit cap) */}
+          <circle cx="55" cy="36" r="24" fill="#FFD7AF" />
+          {/* Cap (top dome) - draw after head so it appears in front */}
+          <ellipse cx="55" cy="26" rx="26" ry="13" fill="#4EB1C9" />
+          {/* Cap brim */}
+          <rect x="36" y="30" width="38" height="7" rx="3.5" fill="#3A94AB" />
+          {/* Ear */}
+          <circle cx="78" cy="38" r="5" fill="#FFD7AF" />
+          {/* Eyes */}
+          <circle cx="49" cy="40" r="2" fill="#2A2A2A" />
+          <circle cx="61" cy="40" r="2" fill="#2A2A2A" />
+          {/* Smile */}
+          <path d="M46,46 Q55,50 64,46" stroke="#A65C3A" strokeWidth="2" fill="none" strokeLinecap="round" />
+          {/* Neck */}
+          <rect x="50" y="60" width="10" height="8" rx="4" fill="#FFD7AF" />
+          {/* Body (teal shirt) */}
+          <rect x="38" y="66" width="34" height="28" rx="10" fill="#4EB1C9" />
+          {/* Arms */}
+          <rect x="32" y="70" width="8" height="14" rx="4" fill="#FFD7AF" />
+          <rect x="70" y="70" width="8" height="14" rx="4" fill="#FFD7AF" />
+          <circle cx="36" cy="84" r="3" fill="#FFD7AF" />
+          <circle cx="74" cy="84" r="3" fill="#FFD7AF" />
+          {/* Shorts */}
+          <rect x="40" y="94" width="12" height="12" rx="3" fill="#51606F" />
+          <rect x="58" y="94" width="12" height="12" rx="3" fill="#51606F" />
+          {/* Legs */}
+          <rect x="42" y="106" width="8" height="18" rx="3" fill="#FFD7AF" />
+          <rect x="60" y="106" width="8" height="18" rx="3" fill="#FFD7AF" />
+          {/* Shoes */}
+          <rect x="39" y="124" width="14" height="6" rx="3" fill="#2F2F2F" />
+          <rect x="59" y="124" width="14" height="6" rx="3" fill="#2F2F2F" />
         </svg>
         {/* Only one stack, let it grow taller */}
         {renderStack(fatherStackState, "bg-blue-500", fatherScrollRef, "Father", fatherTotal)}
         <button
-          className="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+          className="mt-3 inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
           onClick={addFatherBlock}
         >
           Add Father Block
@@ -168,17 +194,43 @@ const DadAndSonGame = ({
 
       {/* Son Section */}
       <div className="flex flex-col items-center">
-        <svg viewBox="0 0 100 120" width="60">
-          <circle cx="50" cy="30" r="15" fill="#ffd7b3" />
-          <path d="M35,25 Q50,10 65,25 Q55,15 35,25Z" fill="#f38f32" />
-          <rect x="43" y="45" width="14" height="25" rx="5" fill="#62b6e8" />
-          <rect x="40" y="70" width="6" height="25" fill="#354f7a" />
-          <rect x="54" y="70" width="6" height="25" fill="#354f7a" />
+        <svg viewBox="0 0 100 135" width="70" aria-label="Son avatar">
+          {/* Son head (slightly smaller to fit cap) */}
+          <circle cx="50" cy="32" r="18" fill="#FFD7AF" />
+          {/* Cap (top dome) - draw after head so it appears in front */}
+          <ellipse cx="50" cy="23" rx="22" ry="11" fill="#4EB1C9" />
+          {/* Cap brim */}
+          <rect x="36" y="26" width="28" height="6" rx="3" fill="#3A94AB" />
+          {/* Ear */}
+          <circle cx="66" cy="34" r="4" fill="#FFD7AF" />
+          {/* Eyes */}
+          <circle cx="44" cy="36" r="1.7" fill="#2A2A2A" />
+          <circle cx="56" cy="36" r="1.7" fill="#2A2A2A" />
+          {/* Smile */}
+          <path d="M42,41 Q50,45 58,41" stroke="#A65C3A" strokeWidth="2" fill="none" strokeLinecap="round" />
+          {/* Neck */}
+          <rect x="46" y="52" width="8" height="6" rx="3" fill="#FFD7AF" />
+          {/* Body (teal shirt) */}
+          <rect x="41" y="56" width="18" height="22" rx="8" fill="#4EB1C9" />
+          {/* Arms */}
+          <rect x="35" y="58" width="6" height="10" rx="3" fill="#FFD7AF" />
+          <rect x="59" y="58" width="6" height="10" rx="3" fill="#FFD7AF" />
+          <circle cx="38" cy="68" r="2.6" fill="#FFD7AF" />
+          <circle cx="62" cy="68" r="2.6" fill="#FFD7AF" />
+          {/* Shorts */}
+          <rect x="42" y="78" width="8" height="10" rx="3" fill="#51606F" />
+          <rect x="50" y="78" width="8" height="10" rx="3" fill="#51606F" />
+          {/* Legs */}
+          <rect x="43" y="88" width="6" height="14" rx="3" fill="#FFD7AF" />
+          <rect x="51" y="88" width="6" height="14" rx="3" fill="#FFD7AF" />
+          {/* Shoes */}
+          <rect x="40" y="102" width="10" height="5" rx="2.5" fill="#2F2F2F" />
+          <rect x="52" y="102" width="10" height="5" rx="2.5" fill="#2F2F2F" />
         </svg>
         {/* Only one stack, let it grow taller */}
         {renderStack(sonStackState, "bg-green-500", sonScrollRef, "Son", sonTotal)}
         <button
-          className="mt-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+          className="mt-3 inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
           onClick={addSonBlock}
         >
           Add Son Block
